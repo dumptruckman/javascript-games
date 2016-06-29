@@ -8,14 +8,13 @@ var snek = (function (window, document, undefined) {
     var TILE_SIZE = 10,
         H_TILES = 50,
         V_TILES = 50,
-        INITIAL_LENGTH = 10,
+        INITIAL_LENGTH = 7,
         INITIAL_SPEED = 250; // Speed is milliseconds per movement
 
     var board = [H_TILES];
     for (var i = 0; i < H_TILES; i++) {
         board[i] = [V_TILES];
     }
-
 
     // Set up canvas
     var animate = window.requestAnimationFrame ||
@@ -223,6 +222,21 @@ var snek = (function (window, document, undefined) {
                 this.timeSinceMove = Math.max(0, this.timeSinceMove - this.speed);
             }
         }
+    };
+
+    function Apple() {
+        this.x = Math.floor(Math.random() * H_TILES);
+        this.y = Math.floor(Math.random() * V_TILES);
+        while (board[this.x][this.y]) { // TODO: need a better method here as this can ultimately produce an infinite loop
+            this.x = Math.floor(Math.random() * H_TILES);
+            this.y = Math.floor(Math.random() * V_TILES);
+        }
+        board[this.x][this.y] = "apple";
+    }
+
+    Apple.prototype.render = function () {
+        context.fillStyle = "#FF0000";
+        context.fillRect(this.x * TILE_SIZE, this.y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
     };
 
     var snake = new Snake();
