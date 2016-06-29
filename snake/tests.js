@@ -3,6 +3,35 @@ window.onload = function () {
 
 };
 
+QUnit.test("testBoard", function( assert ) {
+    var board = new snek.Board(2, 3);
+    for (var i = 0; i < board.hTiles; i++) {
+        for (var j = 0; j < board.vTiles; j++) {
+            assert.deepEqual(board.tiles[i][j], 0);
+        }
+    }
+    board = new snek.Board(3, 2);
+    for (i = 0; i < board.hTiles; i++) {
+        for (j = 0; j < board.vTiles; j++) {
+            assert.deepEqual(board.tiles[i][j], 0);
+        }
+    }
+});
+
+QUnit.test("testAddRemoveTile", function( assert ) {
+    var board = new snek.Board(5, 5);
+    var tile = new snek.Tile(3, 2);
+    assert.ok(board.isOpenTile(3, 2));
+    board.addTile(tile);
+    assert.notOk(board.isOpenTile(3, 2));
+    board.removeTile(3, 2);
+    assert.ok(board.isOpenTile(3, 2));
+    board.addTile(tile);
+    assert.notOk(board.isOpenTile(3, 2));
+    board.removeTile(tile);
+    assert.ok(board.isOpenTile(3, 2));
+});
+
 QUnit.test("testAddNextBlock", function( assert ) {
     var block = new snek.Block(0, 0);
     assert.notOk(block.next);

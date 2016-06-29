@@ -1,7 +1,7 @@
 var snek = (function (window, document, undefined) {
 
     /**
-     * Non-configurable Game Settings
+     * Default Game Settings
      * @type {number}
      * @const
      */
@@ -87,19 +87,65 @@ var snek = (function (window, document, undefined) {
         snake.render();
     };
 
-    function Block(x, y) {
+    /**
+     * Creates a game board.
+     * @param hTiles the number of horizontal tiles on the board
+     * @param vTiles the number of vertical tiles on the board
+     * @constructor
+     */
+    function Board(hTiles, vTiles) {
+        this.hTiles = hTiles ? hTiles : H_TILES;
+        this.vTiles = vTiles ? vTiles : V_TILES;
+
+        this.tiles = [];
+        for (var i = 0; i < this.hTiles; i++) {
+            this.tiles[i] = [];
+            for (var j = 0; j < this.vTiles; j++) {
+                this.tiles[i][j] = 0;
+            }
+        }
+    }
+
+    Board.prototype.isOpenTile = function (x, y) {
+        return !this.tiles[x][y];
+    };
+
+    Board.prototype.addTile = function (tile) {
+        if (this.isOpenTile(tile.x, tile.y)) {
+            this.tiles[tile.x][tile.y] = tile.type;
+        } else {
+            throw new Error("Tile is not empty!");
+        }
+    };
+
+    Board.prototype.removeTile = function (tileOrX, y) {
+        if (y === undefined) {
+            this.tiles[tileOrX.x][tileOrX.y] = 0;
+        } else {
+            this.tiles[tileOrX][y] = 0;
+        }
+    };
+
+    function Tile(x, y, type) {
         this.x = x;
         this.y = y;
+        this.type = type ? type : "appl";
+    }
+
+    Tile.prototype.isSamePosition = function (tile) {
+        return this.x == tile.x && this.y == tile.y;
+    };
+
+    function Block(x, y) {
+        Tile.call(this, x, y, "snek");
         this.next = null;
     }
+    Block.prototype = Object.create(Tile.prototype);
+    Block.prototype.constructor = Block;
 
     Block.prototype.render = function () {
         context.fillStyle = "#00FF00";
         context.fillRect(this.x * TILE_SIZE, this.y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
-    };
-
-    Block.prototype.isSamePosition = function (block) {
-        return this.x == block.x && this.y == block.y;
     };
 
     Block.prototype.addNextBlock = function () {
@@ -246,5 +292,7 @@ var snek = (function (window, document, undefined) {
     module.start = start;
     module.Snake = Snake;
     module.Block = Block;
+    module.Tile = Tile;
+    module.Board = Board;
     return module;
 }(window, document));
