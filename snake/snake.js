@@ -8,8 +8,14 @@ var snek = (function (window, document, undefined) {
     var TILE_SIZE = 10,
         H_TILES = 50,
         V_TILES = 50,
-        INITIAL_LENGTH = 5,
+        INITIAL_LENGTH = 10,
         INITIAL_SPEED = 250; // Speed is milliseconds per movement
+
+    var board = [H_TILES];
+    for (var i = 0; i < H_TILES; i++) {
+        board[i] = [V_TILES];
+    }
+
 
     // Set up canvas
     var animate = window.requestAnimationFrame ||
@@ -50,8 +56,6 @@ var snek = (function (window, document, undefined) {
         render(dt);
         animate(step);
     };
-
-    var board = [[],[]];
 
     var update = function (delta) {
         for(var key in keysDown) {
@@ -123,7 +127,7 @@ var snek = (function (window, document, undefined) {
         this.timeSinceMove = 0;
         this.dead = false;
 
-        board[head.x][head.y] = "snek";
+        board[this.head.x][this.head.y] = "snek";
 
         if (!length) {
             length = INITIAL_LENGTH;
@@ -176,14 +180,19 @@ var snek = (function (window, document, undefined) {
 
         if (this.head.x < 0 || this.head.y < 0 || this.head.x >= H_TILES || this.head.y >= V_TILES) {
             this.dead = true;
+        } else {
+            if (board[this.head.x][this.head.y] == "snek") {
+                this.dead = true;
+            } else {
+                board[this.head.x][this.head.y] = "snek";
+            }
         }
-        if (board[this.head.x][this.head.y])
-        board[head.x][head.y] = "snek";
+
 
         var block = this.head.next,
             oldX, oldY;
         while (block) {
-            oldX = block.x,
+            oldX = block.x;
             oldY = block.y;
             block.x = newX;
             block.y = newY;
@@ -193,7 +202,9 @@ var snek = (function (window, document, undefined) {
             block = block.next;
         }
 
-        board[oldX][oldY] = undefined;
+        if (oldX) {
+            board[oldX][oldY] = null;
+        }
     };
 
     Snake.prototype.update = function (delta) {
