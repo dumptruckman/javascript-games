@@ -9,9 +9,9 @@ var snek = (function (window, document, undefined) {
         H_TILES = 30,
         V_TILES = 30,
         INITIAL_LENGTH = 7,
+        GROW_AMOUNT = 3,
         INITIAL_SPEED_FACTOR = 30, // 1 means snake moves every 100 intervals, 100 means snake moves every 1 interval
-        INTERVAL_SPEED = 15, // milliseconds per game cycle
-        GROW_AMOUNT = 3;
+        INTERVAL_SPEED = 15; // milliseconds per game cycle
 
     var board = new Board(H_TILES, V_TILES);
 
@@ -236,6 +236,7 @@ var snek = (function (window, document, undefined) {
                 break;
         }
 
+        // Handle death conditions
         if (this.head.x < 0 || this.head.y < 0 || this.head.x >= H_TILES || this.head.y >= V_TILES) {
             this.dead = true;
         } else {
@@ -248,7 +249,8 @@ var snek = (function (window, document, undefined) {
 
         var last = this.head;
         var block = this.head.next,
-            oldX, oldY;
+            oldX = newX,
+            oldY = newY;
         while (block) {
             oldX = block.x;
             oldY = block.y;
@@ -301,17 +303,17 @@ var snek = (function (window, document, undefined) {
     Snake.prototype.update = function (delta) {
         this.timeSinceMove += delta;
         if (this.timeSinceMove >= this.speed || this.dead) {
-            if (this.dead) {
-                // Kill the snake one block per movement
-                this.head = this.head ? this.head.next : this.head;
-            }
-
             if (this.head) { // Keep moving the snake as long as it's got a "head"
                 if (!this.dead) { // ignore directions if already dead
                     this.direction = this.nextDirection;
                 }
                 this.move(this.direction);
                 this.timeSinceMove = Math.max(0, this.timeSinceMove - this.speed);
+            }
+
+            if (this.dead) {
+                // Kill the snake one block per movement
+                this.head = this.head ? this.head.next : this.head;
             }
         }
     };

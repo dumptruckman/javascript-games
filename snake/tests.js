@@ -291,6 +291,7 @@ QUnit.test("testKill", function (assert) {
     assert.notOk(snake.head.next);
     assert.equal(board.getTileType(5, 1), "snek");
     assert.ok(board.isOpenTile(5, 2));
+    console.log("now");
     snake.update(250);
     assert.equal(snake.length(), 0);
     assert.notOk(snake.head);
