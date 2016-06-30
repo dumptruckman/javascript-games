@@ -6,42 +6,34 @@ var snek = (function (window, document, undefined) {
      * @const
      */
     var TILE_SIZE = 10,
-        H_TILES = 50,
-        V_TILES = 50,
+        H_TILES = 30,
+        V_TILES = 30,
         INITIAL_LENGTH = 7,
-        INITIAL_SPEED = 250; // Speed is milliseconds per movement
+        INITIAL_SPEED = 150, // Speed is milliseconds per movement
+        GROW_AMOUNT = 3;
 
-    var board = [H_TILES];
-    for (var i = 0; i < H_TILES; i++) {
-        board[i] = [V_TILES];
-    }
+    var board = new Board(H_TILES, V_TILES);
 
     // Set up canvas
-    var animate = window.requestAnimationFrame ||
-            window.webkitRequestAnimationFrame ||
-            window.mozRequestAnimationFrame ||
-            function (callback) {
-                window.setTimeout(callback, 1000 / 60)
-            },
-        canvas = document.createElement('canvas'),
+    var canvas = document.createElement('canvas'),
         width = TILE_SIZE * H_TILES,
         height = TILE_SIZE * V_TILES;
     canvas.width = width;
     canvas.height = height;
     var context = canvas.getContext('2d');
 
-    var start = window.onload = function () {
+    var start = function () {
         document.body.appendChild(canvas);
-        animate(step);
+        setInterval(step, 5);
     };
 
     var keysDown = {};
 
-    window.addEventListener("keydown", function(event) {
+    window.addEventListener("keydown", function (event) {
         keysDown[event.keyCode] = true;
     });
 
-    window.addEventListener("keyup", function(event) {
+    window.addEventListener("keyup", function (event) {
         delete keysDown[event.keyCode];
     });
 
@@ -53,38 +45,52 @@ var snek = (function (window, document, undefined) {
 
         update(dt);
         render(dt);
-        animate(step);
     };
 
     var update = function (delta) {
-        for(var key in keysDown) {
+        for (var key in keysDown) {
             var value = Number(key);
-            if(value == 37) { // left arrow
-                if (snake.direction != "right") {
-                    snake.nextDirection = "left";
-                }
-            } else if (value == 38) { // up arrow
-                if (snake.direction != "down") {
-                    snake.nextDirection = "up";
-                }
-            } else if (value == 39) { // right arrow
-                if (snake.direction != "left") {
-                    snake.nextDirection = "right";
-                }
-            } else if (value == 40) { // down arrow
-                if (snake.direction != "up") {
-                    snake.nextDirection = "down";
-                }
+            switch (value) {
+                case 37: // left arrow
+                    if (snake.direction != "right") {
+                        snake.nextDirection = "left";
+                    }
+                    break;
+                case 38: // up arrow
+                    if (snake.direction != "down") {
+                        snake.nextDirection = "up";
+                    }
+                    break;
+                case 39: // right arrow
+                    if (snake.direction != "left") {
+                        snake.nextDirection = "right";
+                    }
+                    break;
+                case 40: // down arrow
+                    if (snake.direction != "up") {
+                        snake.nextDirection = "down";
+                    }
+                    break;
+                default:
             }
         }
 
         snake.update(delta);
+        if (apple.eaten) {
+            apple = new Apple(board);
+        }
+        if (snake.dead) {
+            if (snake.length() == 0) {
+                snake = new Snake(board);
+            }
+        }
     };
 
     var render = function (delta) {
         context.fillStyle = "#000000";
         context.fillRect(0, 0, width, height);
         snake.render();
+        apple.render();
     };
 
     /**
@@ -110,9 +116,14 @@ var snek = (function (window, document, undefined) {
         return !this.tiles[x][y];
     };
 
+    Board.prototype.getTileType = function (x, y) {
+        var tile = this.tiles[x][y];
+        return tile ? tile.type : tile;
+    };
+
     Board.prototype.addTile = function (tile) {
         if (this.isOpenTile(tile.x, tile.y)) {
-            this.tiles[tile.x][tile.y] = tile.type;
+            this.tiles[tile.x][tile.y] = tile;
         } else {
             throw new Error("Tile is not empty!");
         }
@@ -140,6 +151,7 @@ var snek = (function (window, document, undefined) {
         Tile.call(this, x, y, "snek");
         this.next = null;
     }
+
     Block.prototype = Object.create(Tile.prototype);
     Block.prototype.constructor = Block;
 
@@ -150,7 +162,6 @@ var snek = (function (window, document, undefined) {
 
     Block.prototype.addNextBlock = function () {
         this.next = new Block(this.x, this.y);
-        board[this.next.x][this.next.y] = "snek";
     };
 
     /**
@@ -164,15 +175,16 @@ var snek = (function (window, document, undefined) {
         }
     };
 
-    function Snake(length, speed, x, y) {
-        this.head = new Block(x ? x : Math.floor(H_TILES / 2), y ? y : Math.floor(V_TILES / 2));
+    function Snake(board, length, speed, x, y) {
+        this.head = new Block(x ? x : Math.floor(board.hTiles / 2), y ? y : Math.floor(board.vTiles / 2));
         this.direction = "up";
         this.nextDirection = "up";
         this.speed = speed ? speed : INITIAL_SPEED;
         this.timeSinceMove = 0;
         this.dead = false;
 
-        board[this.head.x][this.head.y] = "snek";
+        this.board = board;
+        this.board.addTile(this.head);
 
         if (!length) {
             length = INITIAL_LENGTH;
@@ -184,7 +196,7 @@ var snek = (function (window, document, undefined) {
         }
     }
 
-    Snake.prototype.render = function() {
+    Snake.prototype.render = function () {
         var block = this.head;
         while (block) {
             block.render();
@@ -204,7 +216,7 @@ var snek = (function (window, document, undefined) {
         return count;
     };
 
-    Snake.prototype.move = function(direction) {
+    Snake.prototype.move = function (direction) {
         var newX = this.head.x,
             newY = this.head.y;
 
@@ -226,14 +238,14 @@ var snek = (function (window, document, undefined) {
         if (this.head.x < 0 || this.head.y < 0 || this.head.x >= H_TILES || this.head.y >= V_TILES) {
             this.dead = true;
         } else {
-            if (board[this.head.x][this.head.y] == "snek") {
-                this.dead = true;
-            } else {
-                board[this.head.x][this.head.y] = "snek";
-            }
+            this.eat(this.board.tiles[this.head.x][this.head.y]);
         }
 
+        if (!this.dead) {
+            this.board.addTile(this.head);
+        }
 
+        var last = this.head;
         var block = this.head.next,
             oldX, oldY;
         while (block) {
@@ -244,11 +256,44 @@ var snek = (function (window, document, undefined) {
             newX = oldX;
             newY = oldY;
 
+            last = block;
             block = block.next;
         }
 
-        if (oldX) {
-            board[oldX][oldY] = null;
+        if (oldX && (last.x != oldX || last.y != oldY)) {
+            this.board.removeTile(oldX, oldY);
+        }
+    };
+
+    Snake.prototype.getTail = function () {
+        var block = this.head;
+        var next = this.head.next;
+        while (next) {
+            block = next;
+            next = block.next;
+        }
+        return block;
+    };
+
+    Snake.prototype.grow = function (amount) {
+        var block = this.getTail();
+        for (var i = 0; i < amount; i++) {
+            block.addNextBlock();
+            block = block.next;
+        }
+    };
+
+    Snake.prototype.eat = function (tile) {
+        switch (tile.type) {
+            case "snek":
+                this.dead = true;
+                break;
+            case "appl":
+                this.board.removeTile(tile);
+                tile.eaten = true;
+                this.grow(tile.growAmount);
+                break;
+            default:
         }
     };
 
@@ -270,22 +315,29 @@ var snek = (function (window, document, undefined) {
         }
     };
 
-    function Apple() {
-        this.x = Math.floor(Math.random() * H_TILES);
-        this.y = Math.floor(Math.random() * V_TILES);
-        while (board[this.x][this.y]) { // TODO: need a better method here as this can ultimately produce an infinite loop
-            this.x = Math.floor(Math.random() * H_TILES);
-            this.y = Math.floor(Math.random() * V_TILES);
+    function Apple(board, x, y, growAmount) {
+        Tile.call(this, x ? x : Math.floor(Math.random() * board.hTiles),
+            y ? y : Math.floor(Math.random() * board.vTiles), "appl");
+        while (!board.isOpenTile(this.x, this.y)) { // TODO: need a better method here as this can ultimately produce an infinite loop
+            this.x = Math.floor(Math.random() * board.hTiles);
+            this.y = Math.floor(Math.random() * board.vTiles);
         }
-        board[this.x][this.y] = "apple";
+        board.addTile(this);
+
+        this.growAmount = growAmount ? growAmount : GROW_AMOUNT;
+        this.eaten = false;
     }
+
+    Apple.prototype = Object.create(Tile.prototype);
+    Apple.prototype.constructor = Apple;
 
     Apple.prototype.render = function () {
         context.fillStyle = "#FF0000";
         context.fillRect(this.x * TILE_SIZE, this.y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
     };
 
-    var snake = new Snake();
+    var snake = new Snake(board);
+    var apple = new Apple(board);
 
     // Set up the module to export
     var module = {};
@@ -294,5 +346,6 @@ var snek = (function (window, document, undefined) {
     module.Block = Block;
     module.Tile = Tile;
     module.Board = Board;
+    module.Apple = Apple;
     return module;
 }(window, document));
