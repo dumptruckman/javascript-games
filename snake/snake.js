@@ -9,7 +9,8 @@ var snek = (function (window, document, undefined) {
         H_TILES = 30,
         V_TILES = 30,
         INITIAL_LENGTH = 7,
-        INITIAL_SPEED = 150, // Speed is milliseconds per movement
+        INITIAL_SPEED_FACTOR = 30, // 1 means snake moves every 100 intervals, 100 means snake moves every 1 interval
+        INTERVAL_SPEED = 15, // milliseconds per game cycle
         GROW_AMOUNT = 3;
 
     var board = new Board(H_TILES, V_TILES);
@@ -24,7 +25,7 @@ var snek = (function (window, document, undefined) {
 
     var start = function () {
         document.body.appendChild(canvas);
-        setInterval(step, 5);
+        setInterval(step, INTERVAL_SPEED);
     };
 
     var keysDown = {};
@@ -179,7 +180,7 @@ var snek = (function (window, document, undefined) {
         this.head = new Block(x ? x : Math.floor(board.hTiles / 2), y ? y : Math.floor(board.vTiles / 2));
         this.direction = "up";
         this.nextDirection = "up";
-        this.speed = speed ? speed : INITIAL_SPEED;
+        this.speed = speed ? 100 / speed * INTERVAL_SPEED : 100 / INITIAL_SPEED_FACTOR * INTERVAL_SPEED;
         this.timeSinceMove = 0;
         this.dead = false;
 
@@ -299,7 +300,7 @@ var snek = (function (window, document, undefined) {
 
     Snake.prototype.update = function (delta) {
         this.timeSinceMove += delta;
-        if (this.timeSinceMove >= this.speed) {
+        if (this.timeSinceMove >= this.speed || this.dead) {
             if (this.dead) {
                 // Kill the snake one block per movement
                 this.head = this.head ? this.head.next : this.head;
