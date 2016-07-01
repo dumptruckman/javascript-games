@@ -264,7 +264,7 @@ var snek = (function (window, document, undefined) {
 
         if (!this.dead) {
             // Handle death conditions if not already dead
-            if (newX < 0 || newY < 0 || newX >= H_TILES || newY >= V_TILES) {
+            if (newX < 0 || newY < 0 || newX >= this.board.hTiles || newY >= this.board.vTiles) {
                 this.dead = true;
             } else {
                 this.eat(this.board.tiles[newX][newY]);

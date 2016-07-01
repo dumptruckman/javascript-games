@@ -372,9 +372,9 @@ function testDeathDirection (assert, board, snake, dir) {
     snake.move(dir);
     snake.move(dir);
     snake.move(dir);
-    assert.notOk(snake.dead, "snake died early when traveling " + dir + "!");
+    assert.notOk(snake.dead);
     snake.move(dir);
-    assert.ok(snake.dead, "snake did not die on time when traveling " + dir + "!");
+    assert.ok(snake.dead);
     snake.update(250);
     snake.update(250);
     snake.update(250);
@@ -384,7 +384,7 @@ function testDeathDirection (assert, board, snake, dir) {
 function testForClearBoard (assert, board) {
     for (var i = 0; i < board.hTiles; i++) {
         for (var j = 0; j < board.vTiles; j++) {
-            assert.notEqual(board.getTileType(i, j), "snek", "There is still snake block at (" + i + ", " + j + ")");
+            assert.notEqual(board.getTileType(i, j), "snek");
         }
     }
 }
