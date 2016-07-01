@@ -169,7 +169,35 @@ QUnit.test("testGrowShrink", function (assert) {
     snake.shrink(5);
     assert.equal(snake.length(), 4);
 
-    
+    assert.equal(tail.x, 5);
+    assert.equal(tail.y, 4);
+    assert.equal(board.getTileType(5, 4), "snek");
+    assert.notEqual(board.getTileType(5, 5), "snek");
+
+    snake.shrink(1);
+    tail = snake.getTail();
+    assert.equal(snake.length(), 3);
+    assert.equal(tail.x, 5);
+    assert.equal(tail.y, 3);
+    assert.equal(board.getTileType(5, 3), "snek");
+    assert.notEqual(board.getTileType(5, 4), "snek");
+
+    snake.shrink(1);
+    tail = snake.getTail();
+    assert.equal(snake.length(), 2);
+    assert.equal(tail.x, 5);
+    assert.equal(tail.y, 2);
+    assert.equal(board.getTileType(5, 2), "snek");
+    assert.notEqual(board.getTileType(5, 3), "snek");
+
+    snake.shrink(1);
+    tail = snake.getTail();
+    assert.equal(snake.length(), 1);
+    assert.equal(snake.head, snake.tail);
+    assert.equal(tail.x, 5);
+    assert.equal(tail.y, 1);
+    assert.equal(board.getTileType(5, 1), "snek");
+    assert.notEqual(board.getTileType(5, 2), "snek");
 });
 
 QUnit.test("testMove", function (assert) {

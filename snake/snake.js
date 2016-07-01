@@ -319,14 +319,22 @@ var snek = (function (window, document, undefined) {
     };
 
     Snake.prototype.shrink = function (amount) {
-        var tail = this.getTail();
-        for (var i = 0; i < amount && tail.prev; i++) {
-            var oldTail = tail;
-            tail = tail.prev;
-            oldTail.prev = undefined;
-            tail.next = undefined;
-            if (oldTail.x != tail.x || oldTail.y != tail.y) {
-                this.board.removeTile(oldTail);
+        if (this.length() < 1) {
+            return;
+        }
+        for (var i = 0; i < amount && (this.dead || this.tail.prev); i++) {
+            if (!this.tail.prev) { // we're removing the last block, the head
+                this.board.removeTile(this.head);
+                this.tail = undefined;
+                this.head = undefined;
+            } else {
+                var oldTail = this.tail;
+                this.tail = this.tail.prev;
+                oldTail.prev = undefined;
+                this.tail.next = undefined;
+                if (oldTail.x != this.tail.x || oldTail.y != this.tail.y) {
+                    this.board.removeTile(oldTail);
+                }
             }
         }
     };
