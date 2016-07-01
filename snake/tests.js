@@ -30,7 +30,20 @@ QUnit.test("testAddRemoveTile", function (assert) {
 QUnit.test("testCreateSnake", function (assert) {
     var board = new snek.Board(5, 5);
     var snake = new snek.Snake(board, 5, 250, 3, 2);
+    var block = snake.head;
+    while (block) {
+        assert.equal(block.x, 3);
+        assert.equal(block.y, 2);
+        block = block.next;
+    }
     assert.equal(board.getTileType(3, 2), "snek");
+    for (var i = 0; i < board.hTiles; i++) {
+        for (var j = 0; j < board.vTiles; j++) {
+            if (i != 3 || j != 2) {
+                assert.notEqual(board.getTileType(i, j), "snek");
+            }
+        }
+    }
 });
 
 QUnit.test("testAddNextBlock", function (assert) {
@@ -98,27 +111,30 @@ QUnit.test("testPullNextBlock", function (assert) {
 });
 
 QUnit.test("testGetTail", function (assert) {
-    var snake = new snek.Snake(new snek.Board(), 3, 500, 5, 5);
+    var snake = new snek.Snake(new snek.Board(1, 6), 3, 30, 0, 5);
     var tail = snake.getTail();
-    assert.equal(tail.x, 5);
+    assert.notOk(tail.next);
     assert.equal(tail.y, 5);
     snake.move("up");
     tail = snake.getTail();
-    assert.equal(tail.x, 5);
+    assert.notOk(tail.next);
     assert.equal(tail.y, 5);
     snake.move("up");
     tail = snake.getTail();
-    assert.equal(tail.x, 5);
+    assert.notOk(tail.next);
     assert.equal(tail.y, 5);
+    console.log(tail);
+    /*
     snake.move("up");
     tail = snake.getTail();
-    assert.equal(tail.x, 5);
+    assert.notOk(tail.next);
     assert.equal(tail.y, 4);
+    */
 });
 
-QUnit.test("testGrow", function (assert) {
+QUnit.test("testGrowShrink", function (assert) {
     var board = new snek.Board(10, 10);
-    var snake = new snek.Snake(board, 3, 500, 5, 5);
+    var snake = new snek.Snake(board, 3, 30, 5, 5);
     snake.move("up");
     snake.move("up");
 
@@ -150,11 +166,15 @@ QUnit.test("testGrow", function (assert) {
 
     snake.grow(5);
     assert.equal(snake.length(), 9);
+    snake.shrink(5);
+    assert.equal(snake.length(), 4);
+
+    
 });
 
 QUnit.test("testMove", function (assert) {
     var board = new snek.Board(10, 10);
-    var snake = new snek.Snake(board, 3, 500, 5, 5);
+    var snake = new snek.Snake(board, 3, 30, 5, 5);
 
     assert.equal(snake.head.x, 5);
     assert.equal(snake.head.y, 5);
@@ -236,7 +256,7 @@ QUnit.test("testMove", function (assert) {
 
 QUnit.test("testKill", function (assert) {
     var board = new snek.Board(10, 10);
-    var snake = new snek.Snake(board, 5, 250, 5, 5);
+    var snake = new snek.Snake(board, 5, 30, 5, 5);
     snake.move("up");
     snake.move("up");
     snake.move("up");
@@ -255,6 +275,7 @@ QUnit.test("testKill", function (assert) {
     assert.equal(snake.length(), 5);
     snake.dead = true;
     assert.equal(snake.length(), 5);
+
     snake.update(250);
     assert.equal(snake.length(), 4);
     assert.equal(snake.head.y, 1);
@@ -267,6 +288,7 @@ QUnit.test("testKill", function (assert) {
     assert.equal(board.getTileType(5, 3), "snek");
     assert.equal(board.getTileType(5, 4), "snek");
     assert.ok(board.isOpenTile(5, 5));
+
     snake.update(250);
     assert.equal(snake.length(), 3);
     assert.equal(snake.head.y, 1);
@@ -277,6 +299,7 @@ QUnit.test("testKill", function (assert) {
     assert.equal(board.getTileType(5, 2), "snek");
     assert.equal(board.getTileType(5, 3), "snek");
     assert.ok(board.isOpenTile(5, 4));
+
     snake.update(250);
     assert.equal(snake.length(), 2);
     assert.equal(snake.head.y, 1);
@@ -285,26 +308,62 @@ QUnit.test("testKill", function (assert) {
     assert.equal(board.getTileType(5, 1), "snek");
     assert.equal(board.getTileType(5, 2), "snek");
     assert.ok(board.isOpenTile(5, 3));
+
     snake.update(250);
     assert.equal(snake.length(), 1);
     assert.equal(snake.head.y, 1);
     assert.notOk(snake.head.next);
     assert.equal(board.getTileType(5, 1), "snek");
     assert.ok(board.isOpenTile(5, 2));
-    console.log("now");
+
     snake.update(250);
     assert.equal(snake.length(), 0);
     assert.notOk(snake.head);
     assert.ok(board.isOpenTile(5, 1));
+
     snake.update(250);
     assert.equal(snake.length(), 0);
     assert.notOk(snake.head);
     assert.ok(board.isOpenTile(5, 1));
 });
 
+QUnit.test("testMoreDeaths", function (assert) {
+    var board = new snek.Board(7, 7);
+    testDeathDirection(assert, board, new snek.Snake(board, 3, 250, 3, 3), "left");
+    testDeathDirection(assert, board, new snek.Snake(board, 3, 250, 3, 3), "left");
+    testDeathDirection(assert, board, new snek.Snake(board, 3, 250, 3, 3), "right");
+    testDeathDirection(assert, board, new snek.Snake(board, 3, 250, 3, 3), "right");
+    testDeathDirection(assert, board, new snek.Snake(board, 3, 250, 3, 3), "up");
+    testDeathDirection(assert, board, new snek.Snake(board, 3, 250, 3, 3), "up");
+    testDeathDirection(assert, board, new snek.Snake(board, 3, 250, 3, 3), "down");
+    testDeathDirection(assert, board, new snek.Snake(board, 3, 250, 3, 3), "down");
+});
+
+function testDeathDirection (assert, board, snake, dir) {
+    snake.direction = dir;
+    snake.move(dir);
+    snake.move(dir);
+    snake.move(dir);
+    assert.notOk(snake.dead, "snake died early when traveling " + dir + "!");
+    snake.move(dir);
+    assert.ok(snake.dead, "snake did not die on time when traveling " + dir + "!");
+    snake.update(250);
+    snake.update(250);
+    snake.update(250);
+    testForClearBoard(assert, board);
+}
+
+function testForClearBoard (assert, board) {
+    for (var i = 0; i < board.hTiles; i++) {
+        for (var j = 0; j < board.vTiles; j++) {
+            assert.notEqual(board.getTileType(i, j), "snek", "There is still snake block at (" + i + ", " + j + ")");
+        }
+    }
+}
+
 QUnit.test("testEatApple", function (assert) {
     var board = new snek.Board(10, 10);
-    var snake = new snek.Snake(board, 3, 250, 5, 6);
+    var snake = new snek.Snake(board, 3, 30, 5, 6);
     var apple = new snek.Apple(board, 5, 2, 2);
 
     assert.equal(snake.length(), 3);

@@ -8,9 +8,9 @@ var snek = (function (window, document, undefined) {
     var TILE_SIZE = 10,
         H_TILES = 30,
         V_TILES = 30,
-        INITIAL_LENGTH = 7,
+        INITIAL_LENGTH = 15,
         GROW_AMOUNT = 3,
-        INITIAL_SPEED_FACTOR = 30, // 1 means snake moves every 100 intervals, 100 means snake moves every 1 interval
+        INITIAL_SPEED_FACTOR = 10, // 1 means snake moves every 100 intervals, 100 means snake moves every 1 interval
         INTERVAL_SPEED = 15; // milliseconds per game cycle
 
     var board = new Board(H_TILES, V_TILES);
@@ -72,6 +72,10 @@ var snek = (function (window, document, undefined) {
                         snake.nextDirection = "down";
                     }
                     break;
+                case 32: // space bar
+                    if (snake.dead && snake.length() == 0) {
+                        snake = new Snake(board);
+                    }
                 default:
             }
         }
@@ -80,16 +84,17 @@ var snek = (function (window, document, undefined) {
         if (apple.eaten) {
             apple = new Apple(board);
         }
-        if (snake.dead) {
-            if (snake.length() == 0) {
-                snake = new Snake(board);
-            }
-        }
+        //if (snake.dead) {
+        //    if (snake.length() == 0) {
+        //        snake = new Snake(board);
+        //    }
+        //}
     };
 
     var render = function (delta) {
         context.fillStyle = "#000000";
         context.fillRect(0, 0, width, height);
+        board.render();
         snake.render();
         apple.render();
     };
@@ -138,6 +143,22 @@ var snek = (function (window, document, undefined) {
         }
     };
 
+    Board.prototype.render = function () {
+        for (var i = 0; i < this.hTiles; i++) {
+            for (var j = 0; j < this.vTiles; j++) {
+                var tile = this.tiles[i][j];
+                if (tile) {
+                    if (tile.type == "snek") {
+                        context.fillStyle = "#FFFFFF";
+                    } else if (tile.type == "appl") {
+                        context.fillStyle = "#0000FF";
+                    }
+                    context.fillRect(tile.x * TILE_SIZE, tile.y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+                }
+            }
+        }
+    };
+
     function Tile(x, y, type) {
         this.x = x;
         this.y = y;
@@ -148,9 +169,10 @@ var snek = (function (window, document, undefined) {
         return this.x == tile.x && this.y == tile.y;
     };
 
-    function Block(x, y) {
+    function Block(x, y, prev) {
         Tile.call(this, x, y, "snek");
-        this.next = null;
+        this.next = undefined;
+        this.prev = prev;
     }
 
     Block.prototype = Object.create(Tile.prototype);
@@ -162,7 +184,7 @@ var snek = (function (window, document, undefined) {
     };
 
     Block.prototype.addNextBlock = function () {
-        this.next = new Block(this.x, this.y);
+        this.next = new Block(this.x, this.y, this);
     };
 
     /**
@@ -191,10 +213,14 @@ var snek = (function (window, document, undefined) {
             length = INITIAL_LENGTH;
         }
         var block = this.head;
-        for (var i = 1; i < length; i = i + 1) { // start at 1 because head already exists
-            block.addNextBlock();
-            block = block.next;
-        }
+        this.tail = block;
+        this.grow(length - 1);
+        //for (var i = 1; i < length; i = i + 1) { // start at 1 because head already exists
+        //    block.addNextBlock();
+        //    block = block.next;
+        //    this.tail = block;
+        //}
+
     }
 
     Snake.prototype.render = function () {
@@ -223,52 +249,55 @@ var snek = (function (window, document, undefined) {
 
         switch (direction) {
             case "up":
-                this.head.y--;
+                newY--;
                 break;
             case "down":
-                this.head.y++;
+                newY++;
                 break;
             case "left":
-                this.head.x--;
+                newX--;
                 break;
             case "right":
-                this.head.x++;
+                newX++;
                 break;
-        }
-
-        // Handle death conditions
-        if (this.head.x < 0 || this.head.y < 0 || this.head.x >= H_TILES || this.head.y >= V_TILES) {
-            this.dead = true;
-        } else {
-            this.eat(this.board.tiles[this.head.x][this.head.y]);
         }
 
         if (!this.dead) {
+            // Handle death conditions if not already dead
+            if (newX < 0 || newY < 0 || newX >= H_TILES || newY >= V_TILES) {
+                this.dead = true;
+            } else {
+                this.eat(this.board.tiles[newX][newY]);
+            }
+        }
+
+        if (!this.dead) {
+            // Propagate the coordinates down the snake
+            var block = this.head,
+                oldX,
+                oldY;
+            while (block) {
+                oldX = block.x;
+                oldY = block.y;
+                block.x = newX;
+                block.y = newY;
+                newX = oldX;
+                newY = oldY;
+
+                block = block.next;
+            }
+
+            // Handle tile updates
             this.board.addTile(this.head);
-        }
-
-        var last = this.head;
-        var block = this.head.next,
-            oldX = newX,
-            oldY = newY;
-        while (block) {
-            oldX = block.x;
-            oldY = block.y;
-            block.x = newX;
-            block.y = newY;
-            newX = oldX;
-            newY = oldY;
-
-            last = block;
-            block = block.next;
-        }
-
-        if (oldX && (last.x != oldX || last.y != oldY)) {
-            this.board.removeTile(oldX, oldY);
+            var tail = this.getTail();
+            if (tail.x != oldX || tail.y != oldY) { // if the tail has moved, remove the previous tile it existed in
+                this.board.removeTile(oldX, oldY);
+            }
         }
     };
 
     Snake.prototype.getTail = function () {
+        /*
         var block = this.head;
         var next = this.head.next;
         while (next) {
@@ -276,6 +305,8 @@ var snek = (function (window, document, undefined) {
             next = block.next;
         }
         return block;
+        */
+        return this.tail;
     };
 
     Snake.prototype.grow = function (amount) {
@@ -283,6 +314,20 @@ var snek = (function (window, document, undefined) {
         for (var i = 0; i < amount; i++) {
             block.addNextBlock();
             block = block.next;
+            this.tail = block;
+        }
+    };
+
+    Snake.prototype.shrink = function (amount) {
+        var tail = this.getTail();
+        for (var i = 0; i < amount && tail.prev; i++) {
+            var oldTail = tail;
+            tail = tail.prev;
+            oldTail.prev = undefined;
+            tail.next = undefined;
+            if (oldTail.x != tail.x || oldTail.y != tail.y) {
+                this.board.removeTile(oldTail);
+            }
         }
     };
 
@@ -313,7 +358,9 @@ var snek = (function (window, document, undefined) {
 
             if (this.dead) {
                 // Kill the snake one block per movement
-                this.head = this.head ? this.head.next : this.head;
+                this.shrink(1);
+                //this.tail = this.tail ? this.tail.prev : this.tail;
+                //this.head = this.head ? this.head.next : this.head;
             }
         }
     };
