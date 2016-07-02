@@ -113,18 +113,17 @@ var snek = (function (window, document, undefined) {
         for (var i = 0; i < this.hTiles; i++) {
             this.tiles[i] = [];
             for (var j = 0; j < this.vTiles; j++) {
-                this.tiles[i][j] = 0;
+                this.tiles[i][j] = new Tile(i, j);
             }
         }
     }
 
     Board.prototype.isOpenTile = function (x, y) {
-        return !this.tiles[x][y];
+        return !this.tiles[x][y].type;
     };
 
     Board.prototype.getTileType = function (x, y) {
-        var tile = this.tiles[x][y];
-        return tile ? tile.type : tile;
+        return this.tiles[x][y].type;
     };
 
     Board.prototype.addTile = function (tile) {
@@ -137,9 +136,9 @@ var snek = (function (window, document, undefined) {
 
     Board.prototype.removeTile = function (tileOrX, y) {
         if (y === undefined) {
-            this.tiles[tileOrX.x][tileOrX.y] = 0;
+            this.tiles[tileOrX.x][tileOrX.y] = new Tile(tileOrX.x, tileOrX.y);
         } else {
-            this.tiles[tileOrX][y] = 0;
+            this.tiles[tileOrX][y] = new Tile(tileOrX, y);
         }
     };
 
@@ -150,10 +149,11 @@ var snek = (function (window, document, undefined) {
                 if (tile) {
                     if (tile.type == "snek") {
                         context.fillStyle = "#FFFFFF";
+                        context.fillRect(tile.x * TILE_SIZE, tile.y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
                     } else if (tile.type == "appl") {
                         context.fillStyle = "#0000FF";
+                        context.fillRect(tile.x * TILE_SIZE, tile.y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
                     }
-                    context.fillRect(tile.x * TILE_SIZE, tile.y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
                 }
             }
         }
@@ -162,7 +162,7 @@ var snek = (function (window, document, undefined) {
     function Tile(x, y, type) {
         this.x = x;
         this.y = y;
-        this.type = type ? type : "appl";
+        this.type = type ? type : 0;
     }
 
     Tile.prototype.isSamePosition = function (tile) {

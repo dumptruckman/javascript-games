@@ -2,20 +2,20 @@ QUnit.test("testBoard", function (assert) {
     var board = new snek.Board(2, 3);
     for (var i = 0; i < board.hTiles; i++) {
         for (var j = 0; j < board.vTiles; j++) {
-            assert.deepEqual(board.tiles[i][j], 0);
+            assert.deepEqual(board.tiles[i][j], new snek.Tile(i, j));
         }
     }
     board = new snek.Board(3, 2);
     for (i = 0; i < board.hTiles; i++) {
         for (j = 0; j < board.vTiles; j++) {
-            assert.deepEqual(board.tiles[i][j], 0);
+            assert.deepEqual(board.tiles[i][j], new snek.Tile(i, j));
         }
     }
 });
 
 QUnit.test("testAddRemoveTile", function (assert) {
     var board = new snek.Board(5, 5);
-    var tile = new snek.Tile(3, 2);
+    var tile = new snek.Tile(3, 2, "snek");
     assert.ok(board.isOpenTile(3, 2));
     board.addTile(tile);
     assert.notOk(board.isOpenTile(3, 2));
