@@ -82,7 +82,11 @@ var snek = (function (window, document, undefined) {
 
         snake.update(delta);
         if (apple.eaten) {
-            apple = new Apple(board);
+            try {
+                apple = new Apple(board);
+            } catch (e) {
+                // the player has won! TODO
+            }
         }
         //if (snake.dead) {
         //    if (snake.length() == 0) {
@@ -140,6 +144,18 @@ var snek = (function (window, document, undefined) {
         } else {
             this.tiles[tileOrX][y] = new Tile(tileOrX, y);
         }
+    };
+
+    Board.prototype.getEmptyTiles = function () {
+        var filtered = [];
+        for (var i = 0; i < this.hTiles; i++) {
+            for (var j = 0; j < this.vTiles; j++) {
+                if (this.isOpenTile(i, j)) {
+                    filtered.push(this.tiles[i][j]);
+                }
+            }
+        }
+        return filtered;
     };
 
     Board.prototype.render = function () {
@@ -374,12 +390,14 @@ var snek = (function (window, document, undefined) {
     };
 
     function Apple(board, x, y, growAmount) {
-        Tile.call(this, x ? x : Math.floor(Math.random() * board.hTiles),
-            y ? y : Math.floor(Math.random() * board.vTiles), "appl");
-        while (!board.isOpenTile(this.x, this.y)) { // TODO: need a better method here as this can ultimately produce an infinite loop
-            this.x = Math.floor(Math.random() * board.hTiles);
-            this.y = Math.floor(Math.random() * board.vTiles);
+        if (x == undefined || y == undefined) {
+            var emptyTiles = board.getEmptyTiles();
+            if (emptyTiles.length() == 0) {
+                throw new Error("There are no empty spaces left on the board");
+            }
+            var i = Math.floor(Math.random() * emptyTiles.length);
         }
+        Tile.call(this, x ? x : emptyTiles[i].x, y ? y : emptyTiles[i].y, "appl");
         board.addTile(this);
 
         this.growAmount = growAmount ? growAmount : GROW_AMOUNT;

@@ -27,6 +27,22 @@ QUnit.test("testAddRemoveTile", function (assert) {
     assert.ok(board.isOpenTile(3, 2));
 });
 
+QUnit.test("testGetEmptyTiles", function (assert) {
+    var board = new snek.Board(5, 5);
+    assert.equal(board.getEmptyTiles().length, 25);
+    board.addTile(new snek.Tile(2, 3, "snek"));
+    board.addTile(new snek.Tile(4, 3, "snek"));
+    assert.equal(board.getEmptyTiles().length, 23);
+    board.removeTile(2, 3);
+    assert.equal(board.getEmptyTiles().length, 24);
+    board.removeTile(4, 3);
+    assert.equal(board.getEmptyTiles().length, 25);
+    board = new snek.Board(1, 1);
+    assert.equal(board.getEmptyTiles().length, 1);
+    board.addTile(new snek.Tile(0, 0, "snek"));
+    assert.equal(board.getEmptyTiles().length, 0);
+});
+
 QUnit.test("testCreateSnake", function (assert) {
     var board = new snek.Board(5, 5);
     var snake = new snek.Snake(board, 5, 250, 3, 2);
