@@ -173,7 +173,7 @@ Score.prototype.render = function() {
     context.font = "30px Arial";
     context.fillText(this.player, 10, 560);
     context.fillText(this.computer, 10, 60)
-}
+};
 
 function Ball(x, y) {
     this.x = x;

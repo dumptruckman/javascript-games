@@ -26,6 +26,13 @@ var snek = (function (window, document, undefined) {
     var start = function () {
         document.body.appendChild(canvas);
         setInterval(step, INTERVAL_SPEED);
+        publish(EVENT.GAME_START);
+    };
+
+    var stop = function() {
+        document.body.removeChild(canvas);
+        clearInterval();
+        publish(EVENT.GAME_STOP);
     };
 
     var keysDown = {};
@@ -397,13 +404,67 @@ var snek = (function (window, document, undefined) {
     var snake = new Snake(board);
     var apple = new Apple(board);
 
+
+    // EVENT SYSTEM
+    /**
+     * @const
+     */
+    var EVENT = {
+        /**
+         * Called when the game is added to the window and started.
+         *
+         * @const
+         */
+        GAME_START: 0,
+        /**
+         * Called when the game is removed from the window and stopped.
+         *
+         * @const
+         */
+        GAME_STOP: 1
+    };
+
+    var subscribers = {};
+
+    /**
+     *
+     * @param event
+     * @param callback
+     */
+    var subscribe = function(event, callback) {
+        subscribers[event] = subscribers[event] || [];
+        subscribers[event].push(callback);
+    };
+
+    var publish = function(event) {
+        console.log(subscribers);
+        if (subscribers && subscribers[event]) {
+            var subs = subscribers[event],
+                args = [].slice.call(arguments, 1),
+                n, max;
+            for(n = 0, max = subs.length ; n < max ; n++) {
+                console.log("applying");
+                subs[n].apply(this, args);
+            }
+        }
+    };
+
+
     // Set up the module to export
     var module = {};
     module.start = start;
+    module.stop = stop;
     module.Snake = Snake;
     module.Block = Block;
     module.Tile = Tile;
     module.Board = Board;
     module.Apple = Apple;
+    module.subscribe = subscribe;
+    /**
+     * The game events that can be subscribed to.
+     *
+     * @const
+     */
+    module.EVENT = EVENT;
     return module;
 }(window, document));

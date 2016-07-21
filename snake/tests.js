@@ -123,7 +123,6 @@ QUnit.test("testGetTail", function (assert) {
     tail = snake.getTail();
     assert.notOk(tail.next);
     assert.equal(tail.y, 5);
-    console.log(tail);
     /*
     snake.move("up");
     tail = snake.getTail();
@@ -422,4 +421,16 @@ QUnit.test("testEatApple", function (assert) {
     snake.move("up"); // snake should now vacate (5, 5);
     assert.equal(board.getTileType(5, 0), "snek");
     assert.ok(board.isOpenTile(5, 5));
+});
+
+QUnit.test("testBasicEvents", function (assert) {
+    var started = false;
+    snek.subscribe(snek.EVENT.GAME_START, function() { started = true; });
+    assert.notOk(started);
+    snek.start();
+    assert.ok(started);
+    snek.subscribe(snek.EVENT.GAME_STOP, function() { started = false; });
+    assert.ok(started);
+    snek.stop();
+    assert.notOk(started);
 });
