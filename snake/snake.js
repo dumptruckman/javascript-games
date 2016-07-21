@@ -29,7 +29,7 @@ var snek = (function (window, document, undefined) {
         publish(EVENT.GAME_START);
     };
 
-    var stop = function() {
+    var stop = function () {
         document.body.removeChild(canvas);
         clearInterval();
         publish(EVENT.GAME_STOP);
@@ -125,46 +125,50 @@ var snek = (function (window, document, undefined) {
         }
     }
 
-    Board.prototype.isOpenTile = function (x, y) {
-        return !this.tiles[x][y];
-    };
+    Object.assign(Board.prototype, {
 
-    Board.prototype.getTileType = function (x, y) {
-        var tile = this.tiles[x][y];
-        return tile ? tile.type : tile;
-    };
+        isOpenTile: function (x, y) {
+            return !this.tiles[x][y];
+        },
 
-    Board.prototype.addTile = function (tile) {
-        if (this.isOpenTile(tile.x, tile.y)) {
-            this.tiles[tile.x][tile.y] = tile;
-        } else {
-            throw new Error("Tile is not empty!");
-        }
-    };
+        getTileType: function (x, y) {
+            var tile = this.tiles[x][y];
+            return tile ? tile.type : tile;
+        },
 
-    Board.prototype.removeTile = function (tileOrX, y) {
-        if (y === undefined) {
-            this.tiles[tileOrX.x][tileOrX.y] = 0;
-        } else {
-            this.tiles[tileOrX][y] = 0;
-        }
-    };
+        addTile: function (tile) {
+            if (this.isOpenTile(tile.x, tile.y)) {
+                this.tiles[tile.x][tile.y] = tile;
+            } else {
+                throw new Error("Tile is not empty!");
+            }
+        },
 
-    Board.prototype.render = function () {
-        for (var i = 0; i < this.hTiles; i++) {
-            for (var j = 0; j < this.vTiles; j++) {
-                var tile = this.tiles[i][j];
-                if (tile) {
-                    if (tile.type == "snek") {
-                        context.fillStyle = "#FFFFFF";
-                    } else if (tile.type == "appl") {
-                        context.fillStyle = "#0000FF";
+        removeTile: function (tileOrX, y) {
+            if (y === undefined) {
+                this.tiles[tileOrX.x][tileOrX.y] = 0;
+            } else {
+                this.tiles[tileOrX][y] = 0;
+            }
+        },
+
+        render: function () {
+            for (var i = 0; i < this.hTiles; i++) {
+                for (var j = 0; j < this.vTiles; j++) {
+                    var tile = this.tiles[i][j];
+                    if (tile) {
+                        if (tile.type == "snek") {
+                            context.fillStyle = "#FFFFFF";
+                        } else if (tile.type == "appl") {
+                            context.fillStyle = "#0000FF";
+                        }
+                        context.fillRect(tile.x * TILE_SIZE, tile.y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
                     }
-                    context.fillRect(tile.x * TILE_SIZE, tile.y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
                 }
             }
         }
-    };
+
+    });
 
     function Tile(x, y, type) {
         this.x = x;
@@ -172,9 +176,13 @@ var snek = (function (window, document, undefined) {
         this.type = type ? type : "appl";
     }
 
-    Tile.prototype.isSamePosition = function (tile) {
-        return this.x == tile.x && this.y == tile.y;
-    };
+    Object.assign(Tile.prototype, {
+
+        isSamePosition: function (tile) {
+            return this.x == tile.x && this.y == tile.y;
+        }
+
+    });
 
     function Block(x, y, prev) {
         Tile.call(this, x, y, "snek");
@@ -185,25 +193,29 @@ var snek = (function (window, document, undefined) {
     Block.prototype = Object.create(Tile.prototype);
     Block.prototype.constructor = Block;
 
-    Block.prototype.render = function () {
-        context.fillStyle = "#00FF00";
-        context.fillRect(this.x * TILE_SIZE, this.y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
-    };
+    Object.assign(Block.prototype, {
 
-    Block.prototype.addNextBlock = function () {
-        this.next = new Block(this.x, this.y, this);
-    };
+        render: function () {
+            context.fillStyle = "#00FF00";
+            context.fillRect(this.x * TILE_SIZE, this.y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+        },
 
-    /**
-     * This will cause the trailing block to take the place of the parent block unless it is already in that position.
-     * This did not work out and is currently unused.
-     */
-    Block.prototype.pullNextBlock = function () {
-        if (this.next && !this.next.isSamePosition(this)) {
-            this.next.x = this.x;
-            this.next.y = this.y;
+        addNextBlock: function () {
+            this.next = new Block(this.x, this.y, this);
+        },
+
+        /**
+         * This will cause the trailing block to take the place of the parent block unless it is already in that position.
+         * This did not work out and is currently unused.
+         */
+        pullNextBlock: function () {
+            if (this.next && !this.next.isSamePosition(this)) {
+                this.next.x = this.x;
+                this.next.y = this.y;
+            }
         }
-    };
+
+    });
 
     function Snake(board, length, speed, x, y) {
         this.head = new Block(x ? x : Math.floor(board.hTiles / 2), y ? y : Math.floor(board.vTiles / 2));
@@ -230,155 +242,150 @@ var snek = (function (window, document, undefined) {
 
     }
 
-    Snake.prototype.render = function () {
-        var block = this.head;
-        while (block) {
-            block.render();
-            block = block.next;
-        }
-    };
+    Object.assign(Snake.prototype, {
 
-    Snake.prototype.length = function () {
-        var count = 0;
-        var block = this.head;
-
-        while (block) {
-            count++;
-            block = block.next;
-        }
-
-        return count;
-    };
-
-    Snake.prototype.move = function (direction) {
-        var newX = this.head.x,
-            newY = this.head.y;
-
-        switch (direction) {
-            case "up":
-                newY--;
-                break;
-            case "down":
-                newY++;
-                break;
-            case "left":
-                newX--;
-                break;
-            case "right":
-                newX++;
-                break;
-        }
-
-        if (!this.dead) {
-            // Handle death conditions if not already dead
-            if (newX < 0 || newY < 0 || newX >= this.board.hTiles || newY >= this.board.vTiles) {
-                this.dead = true;
-            } else {
-                this.eat(this.board.tiles[newX][newY]);
-            }
-        }
-
-        if (!this.dead) {
-            // Propagate the coordinates down the snake
-            var block = this.head,
-                oldX,
-                oldY;
+        render: function () {
+            var block = this.head;
             while (block) {
-                oldX = block.x;
-                oldY = block.y;
-                block.x = newX;
-                block.y = newY;
-                newX = oldX;
-                newY = oldY;
+                block.render();
+                block = block.next;
+            }
+        },
 
+        length: function () {
+            var count = 0;
+            var block = this.head;
+
+            while (block) {
+                count++;
                 block = block.next;
             }
 
-            // Handle tile updates
-            this.board.addTile(this.head);
-            var tail = this.getTail();
-            if (tail.x != oldX || tail.y != oldY) { // if the tail has moved, remove the previous tile it existed in
-                this.board.removeTile(oldX, oldY);
+            return count;
+        },
+
+        move: function (direction) {
+            var newX = this.head.x,
+                newY = this.head.y;
+
+            switch (direction) {
+                case "up":
+                    newY--;
+                    break;
+                case "down":
+                    newY++;
+                    break;
+                case "left":
+                    newX--;
+                    break;
+                case "right":
+                    newX++;
+                    break;
             }
-        }
-    };
 
-    Snake.prototype.getTail = function () {
-        /*
-        var block = this.head;
-        var next = this.head.next;
-        while (next) {
-            block = next;
-            next = block.next;
-        }
-        return block;
-        */
-        return this.tail;
-    };
+            if (!this.dead) {
+                // Handle death conditions if not already dead
+                if (newX < 0 || newY < 0 || newX >= this.board.hTiles || newY >= this.board.vTiles) {
+                    this.dead = true;
+                } else {
+                    this.eat(this.board.tiles[newX][newY]);
+                }
+            }
 
-    Snake.prototype.grow = function (amount) {
-        var block = this.getTail();
-        for (var i = 0; i < amount; i++) {
-            block.addNextBlock();
-            block = block.next;
-            this.tail = block;
-        }
-    };
+            if (!this.dead) {
+                // Propagate the coordinates down the snake
+                var block = this.head,
+                    oldX,
+                    oldY;
+                while (block) {
+                    oldX = block.x;
+                    oldY = block.y;
+                    block.x = newX;
+                    block.y = newY;
+                    newX = oldX;
+                    newY = oldY;
 
-    Snake.prototype.shrink = function (amount) {
-        if (this.length() < 1) {
-            return;
-        }
-        for (var i = 0; i < amount && (this.dead || this.tail.prev); i++) {
-            if (!this.tail.prev) { // we're removing the last block, the head
-                this.board.removeTile(this.head);
-                this.tail = undefined;
-                this.head = undefined;
-            } else {
-                var oldTail = this.tail;
-                this.tail = this.tail.prev;
-                oldTail.prev = undefined;
-                this.tail.next = undefined;
-                if (oldTail.x != this.tail.x || oldTail.y != this.tail.y) {
-                    this.board.removeTile(oldTail);
+                    block = block.next;
+                }
+
+                // Handle tile updates
+                this.board.addTile(this.head);
+                var tail = this.getTail();
+                if (tail.x != oldX || tail.y != oldY) { // if the tail has moved, remove the previous tile it existed in
+                    this.board.removeTile(oldX, oldY);
+                }
+            }
+        },
+
+        getTail: function () {
+            return this.tail;
+        },
+
+        grow: function (amount) {
+            var block = this.getTail();
+            for (var i = 0; i < amount; i++) {
+                block.addNextBlock();
+                block = block.next;
+                this.tail = block;
+            }
+        },
+
+        shrink: function (amount) {
+            if (this.length() < 1) {
+                return;
+            }
+            for (var i = 0; i < amount && (this.dead || this.tail.prev); i++) {
+                if (!this.tail.prev) { // we're removing the last block, the head
+                    this.board.removeTile(this.head);
+                    this.tail = undefined;
+                    this.head = undefined;
+                } else {
+                    var oldTail = this.tail;
+                    this.tail = this.tail.prev;
+                    oldTail.prev = undefined;
+                    this.tail.next = undefined;
+                    if (oldTail.x != this.tail.x || oldTail.y != this.tail.y) {
+                        this.board.removeTile(oldTail);
+                    }
+                }
+            }
+        },
+
+        eat: function (tile) {
+            switch (tile.type) {
+                case "snek":
+                    this.dead = true;
+                    break;
+                case "appl":
+                    this.board.removeTile(tile);
+                    tile.eaten = true;
+                    this.grow(tile.growAmount);
+                    break;
+                default:
+            }
+        },
+
+        update: function (delta) {
+            this.timeSinceMove += delta;
+            if (this.timeSinceMove >= this.speed || this.dead) {
+                if (this.head) { // Keep moving the snake as long as it's got a "head"
+                    if (!this.dead) { // ignore directions if already dead
+                        this.direction = this.nextDirection;
+                    }
+                    this.move(this.direction);
+                    this.timeSinceMove = Math.max(0, this.timeSinceMove - this.speed);
+                }
+
+                if (this.dead) {
+                    // Kill the snake one block per movement
+                    this.shrink(1);
+                    //this.tail = this.tail ? this.tail.prev : this.tail;
+                    //this.head = this.head ? this.head.next : this.head;
                 }
             }
         }
-    };
 
-    Snake.prototype.eat = function (tile) {
-        switch (tile.type) {
-            case "snek":
-                this.dead = true;
-                break;
-            case "appl":
-                this.board.removeTile(tile);
-                tile.eaten = true;
-                this.grow(tile.growAmount);
-                break;
-            default:
-        }
-    };
-
-    Snake.prototype.update = function (delta) {
-        this.timeSinceMove += delta;
-        if (this.timeSinceMove >= this.speed || this.dead) {
-            if (this.head) { // Keep moving the snake as long as it's got a "head"
-                if (!this.dead) { // ignore directions if already dead
-                    this.direction = this.nextDirection;
-                }
-                this.move(this.direction);
-                this.timeSinceMove = Math.max(0, this.timeSinceMove - this.speed);
-            }
-
-            if (this.dead) {
-                // Kill the snake one block per movement
-                this.shrink(1);
-                //this.tail = this.tail ? this.tail.prev : this.tail;
-                //this.head = this.head ? this.head.next : this.head;
-            }
-        }
-    };
+    });
 
     function Apple(board, x, y, growAmount) {
         Tile.call(this, x ? x : Math.floor(Math.random() * board.hTiles),
@@ -395,11 +402,14 @@ var snek = (function (window, document, undefined) {
 
     Apple.prototype = Object.create(Tile.prototype);
     Apple.prototype.constructor = Apple;
+    Object.assign(Apple.prototype, {
 
-    Apple.prototype.render = function () {
-        context.fillStyle = "#FF0000";
-        context.fillRect(this.x * TILE_SIZE, this.y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
-    };
+        render: function () {
+            context.fillStyle = "#FF0000";
+            context.fillRect(this.x * TILE_SIZE, this.y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+        }
+
+    });
 
     var snake = new Snake(board);
     var apple = new Apple(board);
@@ -412,13 +422,11 @@ var snek = (function (window, document, undefined) {
     var EVENT = {
         /**
          * Called when the game is added to the window and started.
-         *
          * @const
          */
         GAME_START: 0,
         /**
          * Called when the game is removed from the window and stopped.
-         *
          * @const
          */
         GAME_STOP: 1
@@ -431,19 +439,17 @@ var snek = (function (window, document, undefined) {
      * @param event
      * @param callback
      */
-    var subscribe = function(event, callback) {
+    var subscribe = function (event, callback) {
         subscribers[event] = subscribers[event] || [];
         subscribers[event].push(callback);
     };
 
-    var publish = function(event) {
-        console.log(subscribers);
+    var publish = function (event) {
         if (subscribers && subscribers[event]) {
             var subs = subscribers[event],
                 args = [].slice.call(arguments, 1),
                 n, max;
-            for(n = 0, max = subs.length ; n < max ; n++) {
-                console.log("applying");
+            for (n = 0, max = subs.length; n < max; n++) {
                 subs[n].apply(this, args);
             }
         }
@@ -462,7 +468,6 @@ var snek = (function (window, document, undefined) {
     module.subscribe = subscribe;
     /**
      * The game events that can be subscribed to.
-     *
      * @const
      */
     module.EVENT = EVENT;
