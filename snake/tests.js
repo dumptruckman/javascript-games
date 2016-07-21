@@ -2,20 +2,20 @@ QUnit.test("testBoard", function (assert) {
     var board = new snek.Board(2, 3);
     for (var i = 0; i < board.hTiles; i++) {
         for (var j = 0; j < board.vTiles; j++) {
-            assert.deepEqual(board.tiles[i][j], 0);
+            assert.deepEqual(board.tiles[i][j], new snek.Tile(i, j));
         }
     }
     board = new snek.Board(3, 2);
     for (i = 0; i < board.hTiles; i++) {
         for (j = 0; j < board.vTiles; j++) {
-            assert.deepEqual(board.tiles[i][j], 0);
+            assert.deepEqual(board.tiles[i][j], new snek.Tile(i, j));
         }
     }
 });
 
 QUnit.test("testAddRemoveTile", function (assert) {
     var board = new snek.Board(5, 5);
-    var tile = new snek.Tile(3, 2);
+    var tile = new snek.Tile(3, 2, "snek");
     assert.ok(board.isOpenTile(3, 2));
     board.addTile(tile);
     assert.notOk(board.isOpenTile(3, 2));
@@ -25,6 +25,22 @@ QUnit.test("testAddRemoveTile", function (assert) {
     assert.notOk(board.isOpenTile(3, 2));
     board.removeTile(tile);
     assert.ok(board.isOpenTile(3, 2));
+});
+
+QUnit.test("testGetEmptyTiles", function (assert) {
+    var board = new snek.Board(5, 5);
+    assert.equal(board.getEmptyTiles().length, 25);
+    board.addTile(new snek.Tile(2, 3, "snek"));
+    board.addTile(new snek.Tile(4, 3, "snek"));
+    assert.equal(board.getEmptyTiles().length, 23);
+    board.removeTile(2, 3);
+    assert.equal(board.getEmptyTiles().length, 24);
+    board.removeTile(4, 3);
+    assert.equal(board.getEmptyTiles().length, 25);
+    board = new snek.Board(1, 1);
+    assert.equal(board.getEmptyTiles().length, 1);
+    board.addTile(new snek.Tile(0, 0, "snek"));
+    assert.equal(board.getEmptyTiles().length, 0);
 });
 
 QUnit.test("testCreateSnake", function (assert) {
