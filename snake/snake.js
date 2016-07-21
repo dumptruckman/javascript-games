@@ -13,8 +13,6 @@ var snek = (function (window, document, undefined) {
         INITIAL_SPEED_FACTOR = 10, // 1 means snake moves every 100 intervals, 100 means snake moves every 1 interval
         INTERVAL_SPEED = 15; // milliseconds per game cycle
 
-    var board = new Board(H_TILES, V_TILES);
-
     // Set up canvas
     var canvas = document.createElement('canvas'),
         width = TILE_SIZE * H_TILES,
@@ -132,15 +130,12 @@ var snek = (function (window, document, undefined) {
     Object.assign(Board.prototype, {
 
         isOpenTile: function (x, y) {
-            return !this.tiles[x][y];
+            return !this.tiles[x][y].type;
         },
-    Board.prototype.isOpenTile = function (x, y) {
-        return !this.tiles[x][y].type;
-    };
 
-    Board.prototype.getTileType = function (x, y) {
-        return this.tiles[x][y].type;
-    };
+        getTileType: function (x, y) {
+            return this.tiles[x][y].type;
+        },
 
         addTile: function (tile) {
             if (this.isOpenTile(tile.x, tile.y)) {
@@ -150,37 +145,38 @@ var snek = (function (window, document, undefined) {
             }
         },
 
-    Board.prototype.removeTile = function (tileOrX, y) {
-        if (y === undefined) {
-            this.tiles[tileOrX.x][tileOrX.y] = new Tile(tileOrX.x, tileOrX.y);
-        } else {
-            this.tiles[tileOrX][y] = new Tile(tileOrX, y);
-        }
-    };
+        removeTile: function (tileOrX, y) {
+            if (y === undefined) {
+                this.tiles[tileOrX.x][tileOrX.y] = new Tile(tileOrX.x, tileOrX.y);
+            } else {
+                this.tiles[tileOrX][y] = new Tile(tileOrX, y);
+            }
+        },
 
-    Board.prototype.getEmptyTiles = function () {
-        var filtered = [];
-        for (var i = 0; i < this.hTiles; i++) {
-            for (var j = 0; j < this.vTiles; j++) {
-                if (this.isOpenTile(i, j)) {
-                    filtered.push(this.tiles[i][j]);
+        getEmptyTiles: function () {
+            var filtered = [];
+            for (var i = 0; i < this.hTiles; i++) {
+                for (var j = 0; j < this.vTiles; j++) {
+                    if (this.isOpenTile(i, j)) {
+                        filtered.push(this.tiles[i][j]);
+                    }
                 }
             }
-        }
-        return filtered;
-    };
+            return filtered;
+        },
 
-    Board.prototype.render = function () {
-        for (var i = 0; i < this.hTiles; i++) {
-            for (var j = 0; j < this.vTiles; j++) {
-                var tile = this.tiles[i][j];
-                if (tile) {
-                    if (tile.type == "snek") {
-                        context.fillStyle = "#FFFFFF";
-                        context.fillRect(tile.x * TILE_SIZE, tile.y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
-                    } else if (tile.type == "appl") {
-                        context.fillStyle = "#0000FF";
-                        context.fillRect(tile.x * TILE_SIZE, tile.y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+        render: function () {
+            for (var i = 0; i < this.hTiles; i++) {
+                for (var j = 0; j < this.vTiles; j++) {
+                    var tile = this.tiles[i][j];
+                    if (tile) {
+                        if (tile.type == "snek") {
+                            context.fillStyle = "#FFFFFF";
+                            context.fillRect(tile.x * TILE_SIZE, tile.y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+                        } else if (tile.type == "appl") {
+                            context.fillStyle = "#0000FF";
+                            context.fillRect(tile.x * TILE_SIZE, tile.y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+                        }
                     }
                 }
             }
@@ -408,7 +404,7 @@ var snek = (function (window, document, undefined) {
     function Apple(board, x, y, growAmount) {
         if (x == undefined || y == undefined) {
             var emptyTiles = board.getEmptyTiles();
-            if (emptyTiles.length() == 0) {
+            if (emptyTiles.length == 0) {
                 throw new Error("There are no empty spaces left on the board");
             }
             var i = Math.floor(Math.random() * emptyTiles.length);
@@ -431,6 +427,7 @@ var snek = (function (window, document, undefined) {
 
     });
 
+    var board = new Board(H_TILES, V_TILES);
     var snake = new Snake(board);
     var apple = new Apple(board);
 
