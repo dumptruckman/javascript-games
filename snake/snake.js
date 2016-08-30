@@ -1,3 +1,6 @@
+/**
+ * @author Jeremy Wood
+ */
 var snek = (function (window, document, undefined) {
 
     /**
